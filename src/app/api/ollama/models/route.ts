@@ -29,7 +29,7 @@ interface FrontendOllamaModel {
   size: number;
 }
 
-const OLLAMA_API_URL = 'http://localhost:11434';
+const OLLAMA_API_URL = 'http://localhost:11434'; // enforce local host with http
 
 export async function GET() {
   try {
