@@ -29,14 +29,14 @@ interface FrontendOllamaModel {
   size: number;
 }
 
-// Ensure the Ollama API URL is hardcoded to http://localhost:11434
-const EFFECTIVE_OLLAMA_API_URL = 'http://localhost:11434';
+// Explicitly define the hardcoded local Ollama URL the backend server will attempt to connect to.
+const ACTUAL_OLLAMA_BACKEND_TARGET_URL = 'http://localhost:11434';
 
 export async function GET() {
-  console.log(`[Ollama API Route] GET request received. Attempting to connect to Ollama at: ${EFFECTIVE_OLLAMA_API_URL}`);
+  console.log(`[Ollama API Route] GET request received. Backend attempting to connect to Ollama at: ${ACTUAL_OLLAMA_BACKEND_TARGET_URL}`);
 
   try {
-    const response = await fetch(`${EFFECTIVE_OLLAMA_API_URL}/api/tags`, {
+    const response = await fetch(`${ACTUAL_OLLAMA_BACKEND_TARGET_URL}/api/tags`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -46,36 +46,33 @@ export async function GET() {
     });
 
     if (!response.ok) {
-      let errorBodyText = `(Could not read error body from Ollama at ${EFFECTIVE_OLLAMA_API_URL})`;
+      let errorBodyText = `(Could not read error body from Ollama at ${ACTUAL_OLLAMA_BACKEND_TARGET_URL})`;
       try {
         // Try to parse error from Ollama if available
         const ollamaError = await response.json();
         if (ollamaError && ollamaError.error) {
           errorBodyText = `Ollama service error: ${ollamaError.error}`;
         } else {
-          errorBodyText = `Ollama service returned status ${response.status} ${response.statusText}, but no specific error message in JSON body.`;
+          errorBodyText = `Ollama service at ${ACTUAL_OLLAMA_BACKEND_TARGET_URL} returned status ${response.status} ${response.statusText}, but no specific error message in JSON body.`;
         }
       } catch (e) {
         // Fallback if parsing error response fails
-        errorBodyText = `Ollama service returned status ${response.status} ${response.statusText}. Additionally, failed to parse its error response body.`;
+        errorBodyText = `Ollama service at ${ACTUAL_OLLAMA_BACKEND_TARGET_URL} returned status ${response.status} ${response.statusText}. Additionally, failed to parse its error response body.`;
       }
       
-      const fullErrorMsg = `Failed to fetch models from Ollama at ${EFFECTIVE_OLLAMA_API_URL}. Details: ${errorBodyText}`;
-      console.error(`[Ollama API Route] Non-OK response from Ollama: ${fullErrorMsg}`);
+      const fullErrorMsg = `Failed to fetch models from Ollama at ${ACTUAL_OLLAMA_BACKEND_TARGET_URL}. Details: ${errorBodyText}`;
+      console.error(`[Ollama API Route] Non-OK response from Ollama (target: ${ACTUAL_OLLAMA_BACKEND_TARGET_URL}): ${fullErrorMsg}`);
 
-      // Check if the error is due to Ollama not being reachable or a clear server-side issue with Ollama
-      // Distinguish between Ollama being down (likely 503 from our fetch) vs. Ollama itself returning an error status
       if (response.status === 503 || response.status === 404 || response.status >= 500) {
-         return NextResponse.json({ error: `Ollama service at ${EFFECTIVE_OLLAMA_API_URL} is likely unavailable or encountered an internal error. Status: ${response.status}. Message: ${errorBodyText}` }, { status: 503 });
+         return NextResponse.json({ error: `Ollama service at ${ACTUAL_OLLAMA_BACKEND_TARGET_URL} is likely unavailable or encountered an internal error. Status: ${response.status}. Message: ${errorBodyText}` }, { status: 503 });
       }
-      // For other client-side errors from Ollama (e.g., 400, 401)
-      return NextResponse.json({ error: `Error from Ollama service at ${EFFECTIVE_OLLAMA_API_URL}. Status: ${response.status}. Message: ${errorBodyText}` }, { status: response.status });
+      return NextResponse.json({ error: `Error from Ollama service at ${ACTUAL_OLLAMA_BACKEND_TARGET_URL}. Status: ${response.status}. Message: ${errorBodyText}` }, { status: response.status });
     }
 
     const data: OllamaApiTagsResponse = await response.json();
 
     if (!data.models || !Array.isArray(data.models)) {
-        const invalidFormatMsg = `Invalid response format from Ollama API at ${EFFECTIVE_OLLAMA_API_URL}. Expected 'models' array.`;
+        const invalidFormatMsg = `Invalid response format from Ollama API at ${ACTUAL_OLLAMA_BACKEND_TARGET_URL}. Expected 'models' array.`;
         console.error('[Ollama API Route]', invalidFormatMsg, 'Received:', data);
         return NextResponse.json({ error: invalidFormatMsg }, { status: 500 });
     }
@@ -85,16 +82,17 @@ export async function GET() {
       modified_at: model.modified_at,
       size: model.size,
     }));
-    console.log(`[Ollama API Route] Successfully fetched ${formattedModels.length} models from ${EFFECTIVE_OLLAMA_API_URL}.`);
+    console.log(`[Ollama API Route] Successfully fetched ${formattedModels.length} models from ${ACTUAL_OLLAMA_BACKEND_TARGET_URL}.`);
     return NextResponse.json(formattedModels);
 
-  } catch (error) { // This catch block is for when the fetch TO EFFECTIVE_OLLAMA_API_URL itself fails (e.g. network error, Ollama service not running)
+  } catch (error) { 
     const fetchErrorDetails = error instanceof Error ? error.message : String(error);
-    // This is the most likely error message structure the user is seeing.
-    const connectionErrorMessage = `Failed to connect to Ollama at ${EFFECTIVE_OLLAMA_API_URL}. Please ensure Ollama is running locally on the server. Details: ${fetchErrorDetails}`;
-    console.error(`[Ollama API Route] Fatal error trying to fetch from Ollama (EFFECTIVE_OLLAMA_API_URL was ${EFFECTIVE_OLLAMA_API_URL}):`, connectionErrorMessage, error); // Log the full error object for more context
+    // This is the most crucial error message for diagnosing the persistent issue.
+    const connectionErrorMessage = `BACKEND_CONNECTION_ATTEMPT_FAILED: The Next.js backend API route attempted to connect to Ollama at the URL: '${ACTUAL_OLLAMA_BACKEND_TARGET_URL}'. This connection failed. Please ensure Ollama is running on the same server as the Next.js application and is accessible at this specific URL from the backend process. Raw fetch error details from backend: ${fetchErrorDetails}`;
     
-    // If fetch failed (e.g. ECONNREFUSED, Timeout), it means Ollama isn't running or isn't reachable at that address from the server.
+    console.error(`[Ollama API Route] Fatal error trying to fetch from Ollama. Backend used URL: '${ACTUAL_OLLAMA_BACKEND_TARGET_URL}'. Full Error Message: ${connectionErrorMessage}`, error); 
+    
     return NextResponse.json({ error: connectionErrorMessage }, { status: 503 }); // Service Unavailable for Ollama
   }
 }
+
