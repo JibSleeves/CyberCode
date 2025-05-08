@@ -48,7 +48,7 @@ const FileSystemItem = ({ node, level = 0 }: { node: FileSystemNode; level?: num
     return (
       <div>
         <div
-          className="flex items-center space-x-1 p-1.5 hover:bg-[hsl(var(--accent)/0.3)] cursor-pointer rounded-sm"
+          className="flex items-center space-x-1 p-1.5 hover:bg-[hsl(var(--accent)/0.2)] cursor-pointer rounded-sm"
           style={{ paddingLeft: `${level * 1 + 0.375}rem` }}
           onClick={() => setIsOpen(!isOpen)}
         >
@@ -69,7 +69,7 @@ const FileSystemItem = ({ node, level = 0 }: { node: FileSystemNode; level?: num
 
   return (
     <div
-      className="flex items-center space-x-1 p-1.5 hover:bg-[hsl(var(--accent)/0.3)] cursor-pointer rounded-sm"
+      className="flex items-center space-x-1 p-1.5 hover:bg-[hsl(var(--accent)/0.2)] cursor-pointer rounded-sm"
       style={{ paddingLeft: `${level * 1 + 0.375}rem` }}
     >
       <FileText className="w-4 h-4 text-[hsl(var(--muted-foreground))]" />
@@ -80,30 +80,31 @@ const FileSystemItem = ({ node, level = 0 }: { node: FileSystemNode; level?: num
 
 
 export function AppSidebar() {
-  const [selectedModel, setSelectedModel] = useState("ollama-llama3-8b");
+  const [selectedModel, setSelectedModel] = useState("google/gemini-2.0-flash"); // Default to the actual model used by Genkit
 
   return (
-    <aside className="w-72 bg-[hsl(var(--sidebar-background))] border-r-2 border-[hsl(var(--primary))] p-3 flex flex-col space-y-4 shadow-[2px_0_10px_hsl(var(--primary))] overflow-y-auto">
+    <aside className="w-72 bg-[hsl(var(--sidebar-background))] border-r-2 border-[hsl(var(--sidebar-border))] p-3 flex flex-col space-y-4 shadow-[2px_0_10px_hsl(var(--sidebar-primary)_/_0.7)] overflow-y-auto">
       <div className="flex items-center space-x-2">
-        <Bot className="w-5 h-5 text-[hsl(var(--primary))]" />
-        <h2 className="text-lg font-semibold text-[hsl(var(--primary))]">Model Configuration</h2>
+        <Bot className="w-5 h-5 text-[hsl(var(--sidebar-primary))] cyber-glow-text-primary" />
+        <h2 className="text-lg font-semibold text-[hsl(var(--sidebar-primary))] cyber-glow-text-primary">Model Config</h2>
       </div>
       <Select value={selectedModel} onValueChange={setSelectedModel}>
         <SelectTrigger className="w-full bg-[hsl(var(--input))] border-[hsl(var(--border))] text-[hsl(var(--foreground))] focus:ring-[hsl(var(--ring))]">
           <SelectValue placeholder="Select LLM Model" />
         </SelectTrigger>
         <SelectContent className="bg-[hsl(var(--popover))] border-[hsl(var(--border))] text-[hsl(var(--popover-foreground))]">
-          <SelectItem value="ollama-llama3-8b" className="focus:bg-[hsl(var(--accent)/0.5)]">Ollama Llama3-8B</SelectItem>
-          <SelectItem value="ollama-codellama-7b" className="focus:bg-[hsl(var(--accent)/0.5)]">Ollama CodeLlama-7B</SelectItem>
-          <SelectItem value="ollama-gemma-2b" className="focus:bg-[hsl(var(--accent)/0.5)]">Ollama Gemma-2B</SelectItem>
-          <SelectItem value="mock-gpt4" className="focus:bg-[hsl(var(--accent)/0.5)]">Mock GPT-4 Turbo</SelectItem>
+          {/* These values are for display. The actual model used is configured in src/ai/genkit.ts */}
+          <SelectItem value="ollama/llama3:8b" className="focus:bg-[hsl(var(--accent)/0.5)]">ollama/llama3:8b</SelectItem>
+          <SelectItem value="ollama/codellama:7b-instruct" className="focus:bg-[hsl(var(--accent)/0.5)]">ollama/codellama:7b-instruct</SelectItem>
+          <SelectItem value="ollama/gemma:2b" className="focus:bg-[hsl(var(--accent)/0.5)]">ollama/gemma:2b</SelectItem>
+          <SelectItem value="google/gemini-2.0-flash" className="focus:bg-[hsl(var(--accent)/0.5)]">google/gemini-2.0-flash</SelectItem>
         </SelectContent>
       </Select>
 
       <div className="flex-1 flex flex-col min-h-0">
         <div className="flex items-center space-x-2 mb-2">
-          <Folder className="w-5 h-5 text-[hsl(var(--primary))]" />
-          <h2 className="text-lg font-semibold text-[hsl(var(--primary))]">File Explorer</h2>
+          <Folder className="w-5 h-5 text-[hsl(var(--sidebar-primary))] cyber-glow-text-primary" />
+          <h2 className="text-lg font-semibold text-[hsl(var(--sidebar-primary))] cyber-glow-text-primary">File Explorer</h2>
         </div>
         <ScrollArea className="flex-1 pr-2">
           {mockFileTree.map((node) => (
@@ -112,8 +113,8 @@ export function AppSidebar() {
         </ScrollArea>
       </div>
 
-      <div className="mt-auto pt-4 border-t border-[hsl(var(--border)/0.5)]">
-        <button className="w-full flex items-center justify-center space-x-2 p-2 rounded-md hover:bg-[hsl(var(--accent)/0.3)] text-[hsl(var(--muted-foreground))]">
+      <div className="mt-auto pt-4 border-t border-[hsl(var(--border)/0.3)]">
+        <button className="w-full flex items-center justify-center space-x-2 p-2 rounded-sm hover:bg-[hsl(var(--accent)/0.2)] text-[hsl(var(--muted-foreground))]">
           <Settings className="w-4 h-4" />
           <span>Settings</span>
         </button>
