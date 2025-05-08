@@ -95,7 +95,7 @@ export async function GET() {
     const fetchErrorDetails = error instanceof Error ? error.message : String(error);
     // This is the most likely error message structure the user is seeing.
     const connectionErrorMessage = `Failed to connect to Ollama at ${EFFECTIVE_OLLAMA_API_URL}. Please ensure Ollama is running locally on the server. Details: ${fetchErrorDetails}`;
-    console.error('[Ollama API Route] Fatal error trying to fetch from Ollama:', connectionErrorMessage, error); // Log the full error object for more context
+    console.error(`[Ollama API Route] Fatal error trying to fetch from Ollama (EFFECTIVE_OLLAMA_API_URL was ${EFFECTIVE_OLLAMA_API_URL}):`, connectionErrorMessage, error); // Log the full error object for more context
     
     // If fetch failed (e.g. ECONNREFUSED, Timeout), it means Ollama isn't running or isn't reachable at that address from the server.
     return NextResponse.json({ error: connectionErrorMessage }, { status: 503 }); // Service Unavailable for Ollama
