@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -26,11 +27,19 @@ export async function summarizeWebContent(input: SummarizeWebContentInput): Prom
   return summarizeWebContentFlow(input);
 }
 
+// Updated prompt to handle potentially raw HTML content
 const prompt = ai.definePrompt({
   name: 'summarizeWebContentPrompt',
-  input: {schema: SummarizeWebContentInputSchema},
+  input: { schema: z.object({ content: z.string().describe("The HTML content of the web page.") }) },
   output: {schema: SummarizeWebContentOutputSchema},
-  prompt: `You are an expert summarizer.  You will be given the content of a web page and you will summarize it in a concise manner.\n\nWeb page content: {{{content}}}`,
+  prompt: `You are an expert summarizer. You will be given the HTML content of a web page. Extract the main textual information and summarize it concisely. Ignore HTML tags, scripts, and styles if possible, focusing on the readable content.
+
+Web page HTML content:
+\`\`\`html
+{{{content}}}
+\`\`\`
+
+Summary:`,
 });
 
 const summarizeWebContentFlow = ai.defineFlow(
@@ -39,9 +48,13 @@ const summarizeWebContentFlow = ai.defineFlow(
     inputSchema: SummarizeWebContentInputSchema,
     outputSchema: SummarizeWebContentOutputSchema,
   },
-  async input => {
+  async (input: SummarizeWebContentInput) => {
     const webPageContent = await getWebPageContent(input.url);
-    const {output} = await prompt({content: webPageContent});
-    return output!;
+    // The LLM will attempt to parse and summarize from the HTML content.
+    const {output} = await prompt({ content: webPageContent });
+    if (!output) {
+        throw new Error("The summarization prompt did not return an output.");
+    }
+    return output;
   }
 );

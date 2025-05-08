@@ -15,6 +15,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAppContext, type FileSystemNode } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
 
+interface OllamaModel {
+  name: string;
+  modified_at: string;
+  size: number;
+}
+
 const FileSystemItem: React.FC<{ node: FileSystemNode; level?: number; onFileSelect: (path: string) => void }> = ({ node, level = 0, onFileSelect }) => {
   const [isOpen, setIsOpen] = useState(level < 1); // Auto-open first level
 
@@ -54,8 +60,39 @@ const FileSystemItem: React.FC<{ node: FileSystemNode; level?: number; onFileSel
 
 
 export function AppSidebar() {
-  const [selectedModel, setSelectedModel] = useState("google/gemini-2.0-flash");
+  const [selectedGenkitModel, setSelectedGenkitModel] = useState("googleai/gemini-2.0-flash"); // For Genkit, still hardcoded
+  const [ollamaModels, setOllamaModels] = useState<OllamaModel[]>([]);
+  const [isLoadingOllamaModels, setIsLoadingOllamaModels] = useState(false);
+  const [selectedOllamaModel, setSelectedOllamaModel] = useState<string | undefined>(undefined);
+
   const { setSelectedFilePath, fileTree, fetchFileTree, isLoadingFileTree, addLogMessage } = useAppContext();
+
+  useEffect(() => {
+    const fetchOllamaModels = async () => {
+      setIsLoadingOllamaModels(true);
+      addLogMessage("Fetching Ollama models...", "info");
+      try {
+        const response = await fetch('/api/ollama/models');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
+        const data: OllamaModel[] = await response.json();
+        setOllamaModels(data);
+        if (data.length > 0) {
+          setSelectedOllamaModel(data[0].name); // Select the first model by default
+        }
+        addLogMessage("Ollama models loaded.", "success");
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        console.error("Failed to fetch Ollama models:", error);
+        addLogMessage(`Error fetching Ollama models: ${errorMessage}`, "error");
+      } finally {
+        setIsLoadingOllamaModels(false);
+      }
+    };
+    fetchOllamaModels();
+  }, [addLogMessage]);
 
   const handleFileSelect = (path: string) => {
     setSelectedFilePath(path);
@@ -66,23 +103,53 @@ export function AppSidebar() {
     fetchFileTree();
   };
 
+  // Note: The selectedOllamaModel is for display. Genkit integration for Ollama is not implemented here.
+  // Genkit will continue to use the 'selectedGenkitModel'.
+
   return (
     <aside className="w-72 bg-[hsl(var(--sidebar-background))] border-r-2 border-[hsl(var(--sidebar-border))] p-3 flex flex-col space-y-4 shadow-[2px_0_10px_hsl(var(--sidebar-primary)_/_0.7)] overflow-y-auto">
       <div className="flex items-center space-x-2">
         <Bot className="w-5 h-5 text-[hsl(var(--sidebar-primary))] cyber-glow-text-primary" />
         <h2 className="text-lg font-semibold text-[hsl(var(--sidebar-primary))] cyber-glow-text-primary">Model Config</h2>
       </div>
-      <Select value={selectedModel} onValueChange={setSelectedModel}>
-        <SelectTrigger className="w-full bg-[hsl(var(--input))] border-[hsl(var(--border))] text-[hsl(var(--foreground))] focus:ring-[hsl(var(--ring))]">
-          <SelectValue placeholder="Select LLM Model" />
-        </SelectTrigger>
-        <SelectContent className="bg-[hsl(var(--popover))] border-[hsl(var(--border))] text-[hsl(var(--popover-foreground))]">
-          <SelectItem value="ollama/llama3:8b" className="focus:bg-[hsl(var(--accent)/0.5)]">ollama/llama3:8b</SelectItem>
-          <SelectItem value="ollama/codellama:7b-instruct" className="focus:bg-[hsl(var(--accent)/0.5)]">ollama/codellama:7b-instruct</SelectItem>
-          <SelectItem value="ollama/gemma:2b" className="focus:bg-[hsl(var(--accent)/0.5)]">ollama/gemma:2b</SelectItem>
-          <SelectItem value="google/gemini-2.0-flash" className="focus:bg-[hsl(var(--accent)/0.5)]">google/gemini-2.0-flash</SelectItem>
-        </SelectContent>
-      </Select>
+      
+      <div>
+        <label htmlFor="genkit-model-select" className="text-xs text-[hsl(var(--muted-foreground))] block mb-1">Genkit LLM (Active)</label>
+        <Select value={selectedGenkitModel} onValueChange={setSelectedGenkitModel} name="genkit-model-select">
+          <SelectTrigger className="w-full bg-[hsl(var(--input))] border-[hsl(var(--border))] text-[hsl(var(--foreground))] focus:ring-[hsl(var(--ring))]">
+            <SelectValue placeholder="Select Genkit LLM Model" />
+          </SelectTrigger>
+          <SelectContent className="bg-[hsl(var(--popover))] border-[hsl(var(--border))] text-[hsl(var(--popover-foreground))]">
+            {/* This list is hardcoded as Genkit is configured with Google AI by default */}
+            <SelectItem value="googleai/gemini-2.0-flash" className="focus:bg-[hsl(var(--accent)/0.5)]">googleai/gemini-2.0-flash</SelectItem>
+            {/* Add other Genkit-compatible models if configured in src/ai/genkit.ts */}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <label htmlFor="ollama-model-select" className="text-xs text-[hsl(var(--muted-foreground))] block mb-1">Ollama Models (Local - Informational)</label>
+        <Select value={selectedOllamaModel} onValueChange={setSelectedOllamaModel} name="ollama-model-select" disabled={isLoadingOllamaModels || ollamaModels.length === 0}>
+          <SelectTrigger className="w-full bg-[hsl(var(--input))] border-[hsl(var(--border))] text-[hsl(var(--foreground))] focus:ring-[hsl(var(--ring))]">
+            {isLoadingOllamaModels ? (
+              <span className="flex items-center"><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading...</span>
+            ) : (
+              <SelectValue placeholder="Select Ollama Model" />
+            )}
+          </SelectTrigger>
+          <SelectContent className="bg-[hsl(var(--popover))] border-[hsl(var(--border))] text-[hsl(var(--popover-foreground))]">
+            {ollamaModels.length === 0 && !isLoadingOllamaModels && (
+              <div className="p-2 text-sm text-center text-[hsl(var(--muted-foreground))]">No Ollama models found.</div>
+            )}
+            {ollamaModels.map(model => (
+              <SelectItem key={model.name} value={model.name} className="focus:bg-[hsl(var(--accent)/0.5)]">
+                {model.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
 
       <div className="flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between space-x-2 mb-2">

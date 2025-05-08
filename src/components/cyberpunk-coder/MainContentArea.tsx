@@ -4,8 +4,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CodeAgentPane } from "./CodeAgentPane";
 import { WebRAGPane } from "./WebRAGPane";
+import { PdfRAGPane } from "./PdfRAGPane"; // Import the new pane
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Code2, Globe, Edit3, TerminalSquareIcon, AlertCircle } from "lucide-react";
+import { Code2, Globe, Edit3, TerminalSquareIcon, AlertCircle, FileQuestion } from "lucide-react"; // Added FileQuestion
 import { EditableCodeEditor } from "./EditableCodeEditor";
 import { useAppContext, type LogMessage as AppLogMessage } from "@/contexts/AppContext";
 import { formatDistanceToNow } from 'date-fns';
@@ -18,7 +19,7 @@ const LogDisplayPane = () => {
       case 'error':
         return <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />;
       case 'success':
-        return <AlertCircle className="w-4 h-4 text-green-500 shrink-0" />; // Using AlertCircle for consistency, could be CheckCircle
+        return <AlertCircle className="w-4 h-4 text-green-500 shrink-0" />; 
       case 'warning':
         return <AlertCircle className="w-4 h-4 text-yellow-500 shrink-0" />;
       default:
@@ -72,6 +73,13 @@ export function MainContentArea() {
             <Globe className="w-4 h-4 mr-2" />
             Web RAG
           </TabsTrigger>
+          <TabsTrigger
+            value="pdf-rag" 
+            className="data-[state=active]:bg-[hsl(var(--primary))] data-[state=active]:text-[hsl(var(--primary-foreground))] data-[state=active]:shadow-[inset_0_0_5px_hsl(var(--primary-foreground)/0.5)] text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent)/0.2)] px-4 py-2 rounded-none text-sm transition-colors duration-150"
+          >
+            <FileQuestion className="w-4 h-4 mr-2" /> {/* Icon for PDF RAG */}
+            PDF RAG
+          </TabsTrigger>
            <TabsTrigger
             value="editor"
             className="data-[state=active]:bg-[hsl(var(--primary))] data-[state=active]:text-[hsl(var(--primary-foreground))] data-[state=active]:shadow-[inset_0_0_5px_hsl(var(--primary-foreground)/0.5)] text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:bg-[hsl(var(--accent)/0.2)] px-4 py-2 rounded-none text-sm transition-colors duration-150"
@@ -92,6 +100,9 @@ export function MainContentArea() {
         </TabsContent>
         <TabsContent value="web-rag" className="flex-1 overflow-y-auto p-0 pt-4 focus-visible:ring-0 focus-visible:ring-offset-0">
           <WebRAGPane />
+        </TabsContent>
+        <TabsContent value="pdf-rag" className="flex-1 overflow-y-auto p-0 pt-4 focus-visible:ring-0 focus-visible:ring-offset-0">
+          <PdfRAGPane />
         </TabsContent>
         <TabsContent value="editor" className="flex-1 overflow-y-auto p-0 focus-visible:ring-0 focus-visible:ring-offset-0">
           <EditableCodeEditor />
