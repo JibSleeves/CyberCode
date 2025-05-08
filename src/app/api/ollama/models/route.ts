@@ -29,11 +29,8 @@ interface FrontendOllamaModel {
   size: number;
 }
 
-// Construct the Ollama API URL from parts to ensure it's http://localhost:11434
-const OLLAMA_PROTOCOL = 'http';
-const OLLAMA_HOST = 'localhost'; // This should be 'localhost' or '127.0.0.1' for Ollama
-const OLLAMA_PORT = '11434';
-const EFFECTIVE_OLLAMA_API_URL = `${OLLAMA_PROTOCOL}://${OLLAMA_HOST}:${OLLAMA_PORT}`;
+// Ensure the Ollama API URL is hardcoded to http://localhost:11434
+const EFFECTIVE_OLLAMA_API_URL = 'http://localhost:11434';
 
 export async function GET() {
   console.log(`[Ollama API Route] GET request received. Attempting to connect to Ollama at: ${EFFECTIVE_OLLAMA_API_URL}`);
