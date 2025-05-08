@@ -31,11 +31,13 @@ interface FrontendOllamaModel {
 
 // Construct the Ollama API URL from parts to ensure it's http://localhost:11434
 const OLLAMA_PROTOCOL = 'http';
-const OLLAMA_HOST = 'localhost';
+const OLLAMA_HOST = 'localhost'; // This should be 'localhost' or '127.0.0.1' for Ollama
 const OLLAMA_PORT = '11434';
 const EFFECTIVE_OLLAMA_API_URL = `${OLLAMA_PROTOCOL}://${OLLAMA_HOST}:${OLLAMA_PORT}`;
 
 export async function GET() {
+  console.log(`[Ollama API Route] GET request received. Attempting to connect to Ollama at: ${EFFECTIVE_OLLAMA_API_URL}`);
+
   try {
     const response = await fetch(`${EFFECTIVE_OLLAMA_API_URL}/api/tags`, {
       method: 'GET',
@@ -47,32 +49,38 @@ export async function GET() {
     });
 
     if (!response.ok) {
-      let errorBody = 'Failed to fetch models from Ollama.';
+      let errorBodyText = `(Could not read error body from Ollama at ${EFFECTIVE_OLLAMA_API_URL})`;
       try {
         // Try to parse error from Ollama if available
         const ollamaError = await response.json();
         if (ollamaError && ollamaError.error) {
-          errorBody = `Ollama API error: ${ollamaError.error}`;
+          errorBodyText = `Ollama service error: ${ollamaError.error}`;
         } else {
-          errorBody = `Failed to fetch models from Ollama. Status: ${response.status} ${response.statusText}`;
+          errorBodyText = `Ollama service returned status ${response.status} ${response.statusText}, but no specific error message in JSON body.`;
         }
       } catch (e) {
         // Fallback if parsing error response fails
-        errorBody = `Failed to fetch models from Ollama. Status: ${response.status} ${response.statusText}. Could not parse error response.`;
+        errorBodyText = `Ollama service returned status ${response.status} ${response.statusText}. Additionally, failed to parse its error response body.`;
       }
-      console.error(errorBody);
-      // Check if the error is due to Ollama not being reachable
-      if (response.status === 503 || response.status === 404 || (response.status >= 500 && response.status <=599 && errorBody.toLowerCase().includes("fetch failed")) ) {
-         return NextResponse.json({ error: `Ollama API is not reachable at ${EFFECTIVE_OLLAMA_API_URL}. Please ensure Ollama is running.` }, { status: 503 });
+      
+      const fullErrorMsg = `Failed to fetch models from Ollama at ${EFFECTIVE_OLLAMA_API_URL}. Details: ${errorBodyText}`;
+      console.error(`[Ollama API Route] Non-OK response from Ollama: ${fullErrorMsg}`);
+
+      // Check if the error is due to Ollama not being reachable or a clear server-side issue with Ollama
+      // Distinguish between Ollama being down (likely 503 from our fetch) vs. Ollama itself returning an error status
+      if (response.status === 503 || response.status === 404 || response.status >= 500) {
+         return NextResponse.json({ error: `Ollama service at ${EFFECTIVE_OLLAMA_API_URL} is likely unavailable or encountered an internal error. Status: ${response.status}. Message: ${errorBodyText}` }, { status: 503 });
       }
-      return NextResponse.json({ error: errorBody }, { status: response.status });
+      // For other client-side errors from Ollama (e.g., 400, 401)
+      return NextResponse.json({ error: `Error from Ollama service at ${EFFECTIVE_OLLAMA_API_URL}. Status: ${response.status}. Message: ${errorBodyText}` }, { status: response.status });
     }
 
     const data: OllamaApiTagsResponse = await response.json();
 
     if (!data.models || !Array.isArray(data.models)) {
-        console.error('Ollama API response does not contain a valid models array:', data);
-        return NextResponse.json({ error: 'Invalid response format from Ollama API.' }, { status: 500 });
+        const invalidFormatMsg = `Invalid response format from Ollama API at ${EFFECTIVE_OLLAMA_API_URL}. Expected 'models' array.`;
+        console.error('[Ollama API Route]', invalidFormatMsg, 'Received:', data);
+        return NextResponse.json({ error: invalidFormatMsg }, { status: 500 });
     }
 
     const formattedModels: FrontendOllamaModel[] = data.models.map(model => ({
@@ -80,21 +88,16 @@ export async function GET() {
       modified_at: model.modified_at,
       size: model.size,
     }));
-
+    console.log(`[Ollama API Route] Successfully fetched ${formattedModels.length} models from ${EFFECTIVE_OLLAMA_API_URL}.`);
     return NextResponse.json(formattedModels);
-  } catch (error) {
-    console.error('Failed to get Ollama models:', error);
-    let errorMessage = 'Internal server error while fetching Ollama models.';
-    if (error instanceof Error) {
-        // Check for specific fetch errors like ECONNREFUSED
-        if (error.message.includes('ECONNREFUSED') || error.name === 'TimeoutError' || error.message.toLowerCase().includes('fetch failed')) {
-            errorMessage = `Ollama API is not reachable at ${EFFECTIVE_OLLAMA_API_URL}. Please ensure Ollama is running. Details: ${error.message}`;
-            return NextResponse.json({ error: errorMessage }, { status: 503 }); // Service Unavailable
-        }
-        errorMessage = error.message;
-    }
+
+  } catch (error) { // This catch block is for when the fetch TO EFFECTIVE_OLLAMA_API_URL itself fails (e.g. network error, Ollama service not running)
+    const fetchErrorDetails = error instanceof Error ? error.message : String(error);
+    // This is the most likely error message structure the user is seeing.
+    const connectionErrorMessage = `Failed to connect to Ollama at ${EFFECTIVE_OLLAMA_API_URL}. Please ensure Ollama is running locally on the server. Details: ${fetchErrorDetails}`;
+    console.error('[Ollama API Route] Fatal error trying to fetch from Ollama:', connectionErrorMessage, error); // Log the full error object for more context
     
-    return NextResponse.json({ error: `Failed to list Ollama models: ${errorMessage}` }, { status: 500 });
+    // If fetch failed (e.g. ECONNREFUSED, Timeout), it means Ollama isn't running or isn't reachable at that address from the server.
+    return NextResponse.json({ error: connectionErrorMessage }, { status: 503 }); // Service Unavailable for Ollama
   }
 }
-
