@@ -29,11 +29,15 @@ interface FrontendOllamaModel {
   size: number;
 }
 
-const OLLAMA_API_URL = 'http://localhost:11434'; // enforce local host with http
+// Construct the Ollama API URL from parts to ensure it's http://localhost:11434
+const OLLAMA_PROTOCOL = 'http';
+const OLLAMA_HOST = 'localhost';
+const OLLAMA_PORT = '11434';
+const EFFECTIVE_OLLAMA_API_URL = `${OLLAMA_PROTOCOL}://${OLLAMA_HOST}:${OLLAMA_PORT}`;
 
 export async function GET() {
   try {
-    const response = await fetch(`${OLLAMA_API_URL}/api/tags`, {
+    const response = await fetch(`${EFFECTIVE_OLLAMA_API_URL}/api/tags`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -59,7 +63,7 @@ export async function GET() {
       console.error(errorBody);
       // Check if the error is due to Ollama not being reachable
       if (response.status === 503 || response.status === 404 || (response.status >= 500 && response.status <=599 && errorBody.toLowerCase().includes("fetch failed")) ) {
-         return NextResponse.json({ error: `Ollama API is not reachable at ${OLLAMA_API_URL}. Please ensure Ollama is running.` }, { status: 503 });
+         return NextResponse.json({ error: `Ollama API is not reachable at ${EFFECTIVE_OLLAMA_API_URL}. Please ensure Ollama is running.` }, { status: 503 });
       }
       return NextResponse.json({ error: errorBody }, { status: response.status });
     }
@@ -84,7 +88,7 @@ export async function GET() {
     if (error instanceof Error) {
         // Check for specific fetch errors like ECONNREFUSED
         if (error.message.includes('ECONNREFUSED') || error.name === 'TimeoutError' || error.message.toLowerCase().includes('fetch failed')) {
-            errorMessage = `Ollama API is not reachable at ${OLLAMA_API_URL}. Please ensure Ollama is running. Details: ${error.message}`;
+            errorMessage = `Ollama API is not reachable at ${EFFECTIVE_OLLAMA_API_URL}. Please ensure Ollama is running. Details: ${error.message}`;
             return NextResponse.json({ error: errorMessage }, { status: 503 }); // Service Unavailable
         }
         errorMessage = error.message;
