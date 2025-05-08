@@ -1,7 +1,9 @@
+
 import type {Metadata} from 'next';
 import { Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
+import { AppProvider } from '@/contexts/AppContext';
 
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
@@ -21,7 +23,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark"> {/* Enforce dark theme globally for cyberpunk style */}
       <body className={`${geistMono.variable} font-mono antialiased`}>
-        {children}
+        <AppProvider>
+          {children}
+        </AppProvider>
         <Toaster />
       </body>
     </html>

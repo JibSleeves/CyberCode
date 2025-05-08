@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -8,6 +9,7 @@ import { Loader2, Wand2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAppContext } from "@/contexts/AppContext";
 
 export function CodeAgentPane() {
   const [taskDescription, setTaskDescription] = useState("");
@@ -15,6 +17,7 @@ export function CodeAgentPane() {
   const [aiResponse, setAiResponse] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { addLogMessage } = useAppContext();
 
   const handleSubmit = async () => {
     if (!taskDescription) {
@@ -23,11 +26,13 @@ export function CodeAgentPane() {
         description: "Please describe the code task you want to perform.",
         variant: "destructive",
       });
+      addLogMessage("Code Agent: Task description missing.", "warning");
       return;
     }
 
     setIsLoading(true);
     setAiResponse("");
+    addLogMessage(`Code Agent: Executing task - "${taskDescription.substring(0,50)}..."`, "info");
 
     try {
       const input: AskCodeQuestionInput = {
@@ -40,14 +45,17 @@ export function CodeAgentPane() {
         title: "Task Executed",
         description: "AI response received.",
       });
+      addLogMessage("Code Agent: Task executed successfully, response received.", "success");
     } catch (error) {
       console.error("Error executing code agent task:", error);
-      setAiResponse("Error: Could not get response from AI agent.");
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      setAiResponse(`Error: Could not get response from AI agent. ${errorMessage}`);
       toast({
         title: "Error",
-        description: "Failed to get response from AI agent. Check console for details.",
+        description: `Failed to get response from AI agent. ${errorMessage}`,
         variant: "destructive",
       });
+      addLogMessage(`Code Agent: Error executing task - ${errorMessage}`, "error");
     } finally {
       setIsLoading(false);
     }

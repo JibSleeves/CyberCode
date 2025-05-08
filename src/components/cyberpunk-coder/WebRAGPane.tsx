@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -8,12 +9,14 @@ import { Loader2, Search, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAppContext } from "@/contexts/AppContext";
 
 export function WebRAGPane() {
   const [url, setUrl] = useState("");
   const [summary, setSummary] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { addLogMessage } = useAppContext();
 
   const handleSubmit = async () => {
     if (!url) {
@@ -22,6 +25,7 @@ export function WebRAGPane() {
         description: "Please enter a URL to summarize.",
         variant: "destructive",
       });
+      addLogMessage("Web RAG: URL missing for summarization.", "warning");
       return;
     }
     // Basic URL validation
@@ -33,11 +37,13 @@ export function WebRAGPane() {
         description: "Please enter a valid URL.",
         variant: "destructive",
       });
+      addLogMessage(`Web RAG: Invalid URL provided - ${url}`, "warning");
       return;
     }
 
     setIsLoading(true);
     setSummary("");
+    addLogMessage(`Web RAG: Fetching and summarizing URL - ${url}`, "info");
 
     try {
       const input: SummarizeWebContentInput = { url };
@@ -47,14 +53,17 @@ export function WebRAGPane() {
         title: "Content Summarized",
         description: "Web page content has been summarized.",
       });
+      addLogMessage(`Web RAG: Successfully summarized ${url}`, "success");
     } catch (error) {
       console.error("Error summarizing web content:", error);
-      setSummary("Error: Could not summarize web content. The URL might be inaccessible or the content too large.");
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      setSummary(`Error: Could not summarize web content. The URL might be inaccessible or the content too large. ${errorMessage}`);
       toast({
         title: "Error",
-        description: "Failed to summarize web content. Check console for details.",
+        description: `Failed to summarize web content. ${errorMessage}`,
         variant: "destructive",
       });
+      addLogMessage(`Web RAG: Error summarizing ${url} - ${errorMessage}`, "error");
     } finally {
       setIsLoading(false);
     }
