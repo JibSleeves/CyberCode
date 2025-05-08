@@ -29,7 +29,7 @@ interface FrontendOllamaModel {
   size: number;
 }
 
-const OLLAMA_API_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+const OLLAMA_API_URL = 'http://localhost:11434';
 
 export async function GET() {
   try {
@@ -93,3 +93,4 @@ export async function GET() {
     return NextResponse.json({ error: `Failed to list Ollama models: ${errorMessage}` }, { status: 500 });
   }
 }
+
