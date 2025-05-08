@@ -1,39 +1,95 @@
 
 import { NextResponse } from 'next/server';
 
-// In a real application, this endpoint would interact with the Ollama API.
-// For example, by running `ollama list` command or calling Ollama's HTTP API.
-// This mock implementation provides a static list for UI development.
+// Define the structure of the raw model data from Ollama API
+interface OllamaApiTagModel {
+  name: string;
+  model: string;
+  modified_at: string;
+  size: number;
+  digest: string;
+  details: {
+    parent_model: string;
+    format: string;
+    family: string;
+    families: string[] | null;
+    parameter_size: string;
+    quantization_level: string;
+  };
+}
 
-interface OllamaModel {
+interface OllamaApiTagsResponse {
+  models: OllamaApiTagModel[];
+}
+
+// Define the structure expected by the frontend
+interface FrontendOllamaModel {
   name: string;
   modified_at: string;
   size: number;
 }
 
-const MOCK_OLLAMA_MODELS: OllamaModel[] = [
-  { name: 'llama3:latest', modified_at: '2024-05-01T10:00:00Z', size: 4700000000 },
-  { name: 'codellama:7b-instruct', modified_at: '2024-04-25T14:30:00Z', size: 3800000000 },
-  { name: 'mistral:latest', modified_at: '2024-05-05T08:15:00Z', size: 4100000000 },
-  { name: 'gemma:2b', modified_at: '2024-04-20T12:00:00Z', size: 1400000000 },
-  { name: 'phi3:mini', modified_at: '2024-05-10T18:45:00Z', size: 2200000000 },
-];
+const OLLAMA_API_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
 
 export async function GET() {
   try {
-    // Simulate an API call to Ollama
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const response = await fetch(`${OLLAMA_API_URL}/api/tags`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // Add a timeout for the request in case Ollama is not responsive
+      signal: AbortSignal.timeout(5000), // 5 seconds timeout
+    });
 
-    // In a real scenario, you would use something like:
-    // const ollamaResponse = await fetch('http://localhost:11434/api/tags');
-    // if (!ollamaResponse.ok) throw new Error('Failed to fetch models from Ollama');
-    // const data = await ollamaResponse.json();
-    // const models = data.models;
+    if (!response.ok) {
+      let errorBody = 'Failed to fetch models from Ollama.';
+      try {
+        // Try to parse error from Ollama if available
+        const ollamaError = await response.json();
+        if (ollamaError && ollamaError.error) {
+          errorBody = `Ollama API error: ${ollamaError.error}`;
+        } else {
+          errorBody = `Failed to fetch models from Ollama. Status: ${response.status} ${response.statusText}`;
+        }
+      } catch (e) {
+        // Fallback if parsing error response fails
+        errorBody = `Failed to fetch models from Ollama. Status: ${response.status} ${response.statusText}. Could not parse error response.`;
+      }
+      console.error(errorBody);
+      // Check if the error is due to Ollama not being reachable
+      if (response.status === 503 || response.status === 404 || (response.status >= 500 && response.status <=599 && errorBody.toLowerCase().includes("fetch failed")) ) {
+         return NextResponse.json({ error: `Ollama API is not reachable at ${OLLAMA_API_URL}. Please ensure Ollama is running.` }, { status: 503 });
+      }
+      return NextResponse.json({ error: errorBody }, { status: response.status });
+    }
 
-    return NextResponse.json(MOCK_OLLAMA_MODELS.map(m => ({ name: m.name, modified_at: m.modified_at, size: m.size })));
+    const data: OllamaApiTagsResponse = await response.json();
+
+    if (!data.models || !Array.isArray(data.models)) {
+        console.error('Ollama API response does not contain a valid models array:', data);
+        return NextResponse.json({ error: 'Invalid response format from Ollama API.' }, { status: 500 });
+    }
+
+    const formattedModels: FrontendOllamaModel[] = data.models.map(model => ({
+      name: model.name,
+      modified_at: model.modified_at,
+      size: model.size,
+    }));
+
+    return NextResponse.json(formattedModels);
   } catch (error) {
     console.error('Failed to get Ollama models:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    let errorMessage = 'Internal server error while fetching Ollama models.';
+    if (error instanceof Error) {
+        // Check for specific fetch errors like ECONNREFUSED
+        if (error.message.includes('ECONNREFUSED') || error.name === 'TimeoutError' || error.message.toLowerCase().includes('fetch failed')) {
+            errorMessage = `Ollama API is not reachable at ${OLLAMA_API_URL}. Please ensure Ollama is running. Details: ${error.message}`;
+            return NextResponse.json({ error: errorMessage }, { status: 503 }); // Service Unavailable
+        }
+        errorMessage = error.message;
+    }
+    
     return NextResponse.json({ error: `Failed to list Ollama models: ${errorMessage}` }, { status: 500 });
   }
 }

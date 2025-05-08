@@ -64,29 +64,38 @@ export function AppSidebar() {
   const [ollamaModels, setOllamaModels] = useState<OllamaModel[]>([]);
   const [isLoadingOllamaModels, setIsLoadingOllamaModels] = useState(false);
   const [selectedOllamaModel, setSelectedOllamaModel] = useState<string | undefined>(undefined);
+  const [ollamaError, setOllamaError] = useState<string | null>(null);
+
 
   const { setSelectedFilePath, fileTree, fetchFileTree, isLoadingFileTree, addLogMessage } = useAppContext();
 
   useEffect(() => {
     const fetchOllamaModels = async () => {
       setIsLoadingOllamaModels(true);
-      addLogMessage("Fetching Ollama models...", "info");
+      setOllamaError(null);
+      addLogMessage("Attempting to fetch Ollama models...", "info");
       try {
         const response = await fetch('/api/ollama/models');
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+          const errorMessage = errorData.error || `HTTP error! status: ${response.status}`;
+          throw new Error(errorMessage);
         }
         const data: OllamaModel[] = await response.json();
         setOllamaModels(data);
         if (data.length > 0) {
-          setSelectedOllamaModel(data[0].name); // Select the first model by default
+          setSelectedOllamaModel(data[0].name); 
+          addLogMessage(`Successfully loaded ${data.length} Ollama models.`, "success");
+        } else {
+          addLogMessage("No Ollama models found. Ensure Ollama is running and models are installed.", "warning");
+          setOllamaError("No Ollama models found. Check if Ollama is running and has models installed.");
         }
-        addLogMessage("Ollama models loaded.", "success");
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        const errorMessage = error instanceof Error ? error.message : "Unknown error fetching Ollama models";
         console.error("Failed to fetch Ollama models:", error);
-        addLogMessage(`Error fetching Ollama models: ${errorMessage}`, "error");
+        addLogMessage(`Error fetching Ollama models: ${errorMessage}. Please ensure Ollama is running and accessible.`, "error");
+        setOllamaError(errorMessage);
+        setOllamaModels([]); // Clear any existing models
       } finally {
         setIsLoadingOllamaModels(false);
       }
@@ -103,9 +112,6 @@ export function AppSidebar() {
     fetchFileTree();
   };
 
-  // Note: The selectedOllamaModel is for display. Genkit integration for Ollama is not implemented here.
-  // Genkit will continue to use the 'selectedGenkitModel'.
-
   return (
     <aside className="w-72 bg-[hsl(var(--sidebar-background))] border-r-2 border-[hsl(var(--sidebar-border))] p-3 flex flex-col space-y-4 shadow-[2px_0_10px_hsl(var(--sidebar-primary)_/_0.7)] overflow-y-auto">
       <div className="flex items-center space-x-2">
@@ -120,28 +126,33 @@ export function AppSidebar() {
             <SelectValue placeholder="Select Genkit LLM Model" />
           </SelectTrigger>
           <SelectContent className="bg-[hsl(var(--popover))] border-[hsl(var(--border))] text-[hsl(var(--popover-foreground))]">
-            {/* This list is hardcoded as Genkit is configured with Google AI by default */}
             <SelectItem value="googleai/gemini-2.0-flash" className="focus:bg-[hsl(var(--accent)/0.5)]">googleai/gemini-2.0-flash</SelectItem>
-            {/* Add other Genkit-compatible models if configured in src/ai/genkit.ts */}
           </SelectContent>
         </Select>
       </div>
 
       <div>
         <label htmlFor="ollama-model-select" className="text-xs text-[hsl(var(--muted-foreground))] block mb-1">Ollama Models (Local - Informational)</label>
-        <Select value={selectedOllamaModel} onValueChange={setSelectedOllamaModel} name="ollama-model-select" disabled={isLoadingOllamaModels || ollamaModels.length === 0}>
+        <Select value={selectedOllamaModel} onValueChange={setSelectedOllamaModel} name="ollama-model-select" disabled={isLoadingOllamaModels || (ollamaModels.length === 0 && !ollamaError)}>
           <SelectTrigger className="w-full bg-[hsl(var(--input))] border-[hsl(var(--border))] text-[hsl(var(--foreground))] focus:ring-[hsl(var(--ring))]">
             {isLoadingOllamaModels ? (
               <span className="flex items-center"><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading...</span>
             ) : (
-              <SelectValue placeholder="Select Ollama Model" />
+              <SelectValue placeholder={ollamaError ? "Error loading models" : "Select Ollama Model"} />
             )}
           </SelectTrigger>
           <SelectContent className="bg-[hsl(var(--popover))] border-[hsl(var(--border))] text-[hsl(var(--popover-foreground))]">
-            {ollamaModels.length === 0 && !isLoadingOllamaModels && (
-              <div className="p-2 text-sm text-center text-[hsl(var(--muted-foreground))]">No Ollama models found.</div>
+            {isLoadingOllamaModels && <div className="p-2 text-sm text-center text-[hsl(var(--muted-foreground))]">Loading...</div>}
+            {!isLoadingOllamaModels && ollamaError && (
+              <div className="p-2 text-sm text-center text-red-500">
+                Error: {ollamaError.length > 50 ? ollamaError.substring(0,50) + "..." : ollamaError}
+                <p className="text-xs text-[hsl(var(--muted-foreground))]">Ensure Ollama is running.</p>
+              </div>
             )}
-            {ollamaModels.map(model => (
+            {!isLoadingOllamaModels && !ollamaError && ollamaModels.length === 0 && (
+              <div className="p-2 text-sm text-center text-[hsl(var(--muted-foreground))]">No Ollama models found. Ensure Ollama is running and models are installed.</div>
+            )}
+            {!ollamaError && ollamaModels.map(model => (
               <SelectItem key={model.name} value={model.name} className="focus:bg-[hsl(var(--accent)/0.5)]">
                 {model.name}
               </SelectItem>
