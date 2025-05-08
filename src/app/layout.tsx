@@ -21,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark"> {/* Enforce dark theme globally for cyberpunk style */}
+    <html lang="en" className="dark">{/* Enforce dark theme globally for cyberpunk style */}
       <body className={`${geistMono.variable} font-mono antialiased`}>
         <AppProvider>
           {children}
@@ -31,3 +31,4 @@ export default function RootLayout({
     </html>
   );
 }
+
