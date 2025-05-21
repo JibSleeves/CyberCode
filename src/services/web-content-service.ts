@@ -1,6 +1,5 @@
-
 // In a real application, you might use a library like Cheerio for more robust HTML parsing on the backend.
-// For this service, we'll attempt to extract text content simply.
+// For this service, we'll simply return the raw HTML content.
 
 export async function getWebPageContent(url: string): Promise<string> {
   console.log(`Fetching content for URL: ${url}`);

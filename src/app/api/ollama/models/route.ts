@@ -95,4 +95,3 @@ export async function GET() {
     return NextResponse.json({ error: connectionErrorMessage }, { status: 503 }); // Service Unavailable for Ollama
   }
 }
-
