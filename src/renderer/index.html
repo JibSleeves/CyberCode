@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quonx IDE - Autonomous AI Coding Environment</title>
+    
+    <!-- Pixel Art Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    
+    <!-- Monaco Editor -->
+    <link rel="stylesheet" data-name="vs/editor/editor.main" href="../node_modules/monaco-editor/min/vs/editor/editor.main.css">
+    
+    <!-- Main Styles -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/pixel-theme.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <div id="app" class="quonx-app">
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="loading-screen">
+            <div class="loading-content">
+                <div class="pixel-logo">
+                    <div class="logo-text">QUONX</div>
+                    <div class="logo-subtitle">Autonomous AI IDE</div>
+                </div>
+                <div class="loading-bar">
+                    <div class="loading-progress"></div>
+                </div>
+                <div class="loading-text">Initializing AI Systems...</div>
+            </div>
+        </div>
+
+        <!-- Main IDE Interface -->
+        <div id="main-interface" class="main-interface" style="display: none;">
+            <!-- Title Bar -->
+            <div class="title-bar">
+                <div class="title-bar-left">
+                    <div class="app-icon"></div>
+                    <span class="app-title">Quonx IDE</span>
+                </div>
+                <div class="title-bar-center">
+                    <div class="project-name" id="current-project">No Project</div>
+                </div>
+                <div class="title-bar-right">
+                    <div class="ai-status" id="ai-status">
+                        <span class="status-dot active"></span>
+                        <span class="status-text">AI Ready</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Layout -->
+            <div class="main-layout">
+                <!-- Left Sidebar -->
+                <div class="sidebar left-sidebar">
+                    <div class="sidebar-tabs">
+                        <button class="tab-button active" data-tab="explorer">
+                            <span class="icon">📁</span>
+                            <span class="label">Files</span>
+                        </button>
+                        <button class="tab-button" data-tab="search">
+                            <span class="icon">🔍</span>
+                            <span class="label">Search</span>
+                        </button>
+                        <button class="tab-button" data-tab="git">
+                            <span class="icon">🌿</span>
+                            <span class="label">Git</span>
+                        </button>
+                        <button class="tab-button" data-tab="ai-tools">
+                            <span class="icon">🤖</span>
+                            <span class="label">AI Tools</span>
+                        </button>
+                    </div>
+                    
+                    <div class="sidebar-content">
+                        <!-- File Explorer -->
+                        <div class="tab-panel active" id="explorer-panel">
+                            <div class="panel-header">
+                                <h3>Explorer</h3>
+                                <div class="panel-actions">
+                                    <button class="icon-button" id="new-file" title="New File">📄</button>
+                                    <button class="icon-button" id="new-folder" title="New Folder">📁</button>
+                                    <button class="icon-button" id="refresh-explorer" title="Refresh">🔄</button>
+                                </div>
+                            </div>
+                            <div class="file-tree" id="file-tree">
+                                <div class="empty-state">
+                                    <div class="empty-icon">📂</div>
+                                    <div class="empty-text">Open a folder to start</div>
+                                    <button class="pixel-button" id="open-folder-btn">Open Folder</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Search Panel -->
+                        <div class="tab-panel" id="search-panel">
+                            <div class="panel-header">
+                                <h3>Search</h3>
+                            </div>
+                            <div class="search-form">
+                                <input type="text" class="pixel-input" placeholder="Search in files..." id="search-input">
+                                <input type="text" class="pixel-input" placeholder="Replace with..." id="replace-input">
+                                <div class="search-options">
+                                    <label class="pixel-checkbox">
+                                        <input type="checkbox" id="case-sensitive">
+                                        <span class="checkmark"></span>
+                                        Case Sensitive
+                                    </label>
+                                    <label class="pixel-checkbox">
+                                        <input type="checkbox" id="regex-search">
+                                        <span class="checkmark"></span>
+                                        Regex
+                                    </label>
+                                </div>
+                                <button class="pixel-button" id="search-btn">Search</button>
+                            </div>
+                            <div class="search-results" id="search-results"></div>
+                        </div>
+
+                        <!-- Git Panel -->
+                        <div class="tab-panel" id="git-panel">
+                            <div class="panel-header">
+                                <h3>Source Control</h3>
+                            </div>
+                            <div class="git-status" id="git-status">
+                                <div class="empty-state">
+                                    <div class="empty-icon">🌿</div>
+                                    <div class="empty-text">No git repository</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI Tools Panel -->
+                        <div class="tab-panel" id="ai-tools-panel">
+                            <div class="panel-header">
+                                <h3>AI Tools</h3>
+                            </div>
+                            <div class="ai-tools-list">
+                                <button class="tool-button" id="code-generation">
+                                    <span class="tool-icon">⚡</span>
+                                    <span class="tool-label">Generate Code</span>
+                                </button>
+                                <button class="tool-button" id="code-explanation">
+                                    <span class="tool-icon">💡</span>
+                                    <span class="tool-label">Explain Code</span>
+                                </button>
+                                <button class="tool-button" id="refactor-code">
+                                    <span class="tool-icon">🔧</span>
+                                    <span class="tool-label">Refactor</span>
+                                </button>
+                                <button class="tool-button" id="find-bugs">
+                                    <span class="tool-icon">🐛</span>
+                                    <span class="tool-label">Find Bugs</span>
+                                </button>
+                                <button class="tool-button" id="optimize-code">
+                                    <span class="tool-icon">🚀</span>
+                                    <span class="tool-label">Optimize</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Area -->
+                <div class="main-content">
+                    <!-- Tab Bar -->
+                    <div class="tab-bar" id="editor-tabs">
+                        <div class="tab-list" id="tab-list">
+                            <!-- Tabs will be dynamically added here -->
+                        </div>
+                        <div class="tab-actions">
+                            <button class="icon-button" id="split-editor" title="Split Editor">⚏</button>
+                            <button class="icon-button" id="close-all-tabs" title="Close All">✕</button>
+                        </div>
+                    </div>
+
+                    <!-- Editor Container -->
+                    <div class="editor-container">
+                        <div class="editor-welcome" id="editor-welcome">
+                            <div class="welcome-content">
+                                <div class="welcome-logo">
+                                    <div class="pixel-logo-large">QUONX</div>
+                                    <div class="welcome-subtitle">Autonomous AI Coding IDE</div>
+                                </div>
+                                
+                                <div class="welcome-actions">
+                                    <div class="action-group">
+                                        <h4>Start</h4>
+                                        <button class="welcome-button" id="welcome-new-project">
+                                            <span class="button-icon">📁</span>
+                                            New Project
+                                        </button>
+                                        <button class="welcome-button" id="welcome-open-project">
+                                            <span class="button-icon">📂</span>
+                                            Open Project
+                                        </button>
+                                        <button class="welcome-button" id="welcome-clone-repo">
+                                            <span class="button-icon">🌿</span>
+                                            Clone Repository
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="action-group">
+                                        <h4>AI Features</h4>
+                                        <button class="welcome-button" id="welcome-ai-chat">
+                                            <span class="button-icon">💬</span>
+                                            Chat with AI
+                                        </button>
+                                        <button class="welcome-button" id="welcome-generate-project">
+                                            <span class="button-icon">⚡</span>
+                                            Generate Project
+                                        </button>
+                                        <button class="welcome-button" id="welcome-upload-docs">
+                                            <span class="button-icon">📄</span>
+                                            Upload Documents
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="recent-projects">
+                                    <h4>Recent Projects</h4>
+                                    <div class="recent-list" id="recent-projects-list">
+                                        <div class="empty-recent">No recent projects</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Monaco Editor will be mounted here -->
+                        <div class="editor-mount" id="editor-mount" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Right Sidebar -->
+                <div class="sidebar right-sidebar">
+                    <div class="sidebar-tabs">
+                        <button class="tab-button active" data-tab="ai-chat">
+                            <span class="icon">💬</span>
+                            <span class="label">AI Chat</span>
+                        </button>
+                        <button class="tab-button" data-tab="outline">
+                            <span class="icon">📋</span>
+                            <span class="label">Outline</span>
+                        </button>
+                        <button class="tab-button" data-tab="problems">
+                            <span class="icon">⚠️</span>
+                            <span class="label">Problems</span>
+                        </button>
+                        <button class="tab-button" data-tab="ai-insights">
+                            <span class="icon">🧠</span>
+                            <span class="label">Insights</span>
+                        </button>
+                    </div>
+                    
+                    <div class="sidebar-content">
+                        <!-- AI Chat Panel -->
+                        <div class="tab-panel active" id="ai-chat-panel">
+                            <div class="panel-header">
+                                <h3>AI Assistant</h3>
+                                <div class="model-selector">
+                                    <select class="pixel-select" id="chat-model-select">
+                                        <option value="local">Local Model</option>
+                                        <option value="openai">OpenAI GPT-4</option>
+                                        <option value="claude">Claude</option>
+                                        <option value="gemini">Google Gemini</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="chat-container">
+                                <div class="chat-messages" id="chat-messages">
+                                    <div class="system-message">
+                                        <div class="message-avatar">🤖</div>
+                                        <div class="message-content">
+                                            <div class="message-text">Hello! I'm Quonx, your AI coding assistant. How can I help you today?</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="chat-input-area">
+                                    <div class="input-toolbar">
+                                        <button class="toolbar-button" id="attach-file" title="Attach File">📎</button>
+                                        <button class="toolbar-button" id="voice-input" title="Voice Input">🎤</button>
+                                        <button class="toolbar-button" id="screenshot" title="Screenshot">📸</button>
+                                    </div>
+                                    <div class="input-container">
+                                        <textarea class="chat-input" id="chat-input" placeholder="Ask me anything about your code..."></textarea>
+                                        <button class="send-button" id="send-message">
+                                            <span class="send-icon">▶️</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Code Outline Panel -->
+                        <div class="tab-panel" id="outline-panel">
+                            <div class="panel-header">
+                                <h3>Outline</h3>
+                            </div>
+                            <div class="outline-tree" id="outline-tree">
+                                <div class="empty-state">
+                                    <div class="empty-icon">📋</div>
+                                    <div class="empty-text">Open a file to see outline</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Problems Panel -->
+                        <div class="tab-panel" id="problems-panel">
+                            <div class="panel-header">
+                                <h3>Problems</h3>
+                                <div class="problem-stats">
+                                    <span class="error-count">0 errors</span>
+                                    <span class="warning-count">0 warnings</span>
+                                </div>
+                            </div>
+                            <div class="problems-list" id="problems-list">
+                                <div class="empty-state">
+                                    <div class="empty-icon">✅</div>
+                                    <div class="empty-text">No problems detected</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI Insights Panel -->
+                        <div class="tab-panel" id="ai-insights-panel">
+                            <div class="panel-header">
+                                <h3>AI Insights</h3>
+                            </div>
+                            <div class="insights-container">
+                                <div class="insight-card">
+                                    <div class="insight-header">
+                                        <span class="insight-icon">💡</span>
+                                        <span class="insight-title">Code Quality</span>
+                                    </div>
+                                    <div class="insight-content">
+                                        <div class="quality-score">85/100</div>
+                                        <div class="quality-details">Good code structure with room for optimization</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="insight-card">
+                                    <div class="insight-header">
+                                        <span class="insight-icon">🚀</span>
+                                        <span class="insight-title">Performance</span>
+                                    </div>
+                                    <div class="insight-content">
+                                        <div class="performance-metrics">
+                                            <div class="metric">
+                                                <span class="metric-label">Complexity:</span>
+                                                <span class="metric-value">Low</span>
+                                            </div>
+                                            <div class="metric">
+                                                <span class="metric-label">Memory:</span>
+                                                <span class="metric-value">Efficient</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Panel -->
+            <div class="bottom-panel">
+                <div class="panel-tabs">
+                    <button class="tab-button active" data-tab="terminal">
+                        <span class="icon">💻</span>
+                        <span class="label">Terminal</span>
+                    </button>
+                    <button class="tab-button" data-tab="output">
+                        <span class="icon">📄</span>
+                        <span class="label">Output</span>
+                    </button>
+                    <button class="tab-button" data-tab="debug">
+                        <span class="icon">🐛</span>
+                        <span class="label">Debug Console</span>
+                    </button>
+                    <button class="tab-button" data-tab="ai-logs">
+                        <span class="icon">🤖</span>
+                        <span class="label">AI Logs</span>
+                    </button>
+                </div>
+                
+                <div class="panel-content">
+                    <!-- Terminal -->
+                    <div class="tab-panel active" id="terminal-panel">
+                        <div class="terminal-container" id="terminal-container">
+                            <div class="terminal-header">
+                                <div class="terminal-title">Terminal</div>
+                                <div class="terminal-actions">
+                                    <button class="icon-button" id="new-terminal">+</button>
+                                    <button class="icon-button" id="split-terminal">⚏</button>
+                                    <button class="icon-button" id="clear-terminal">🗑️</button>
+                                </div>
+                            </div>
+                            <div class="terminal-content" id="terminal-content">
+                                <div class="terminal-output" id="terminal-output"></div>
+                                <div class="terminal-input-line">
+                                    <span class="terminal-prompt">$ </span>
+                                    <input type="text" class="terminal-input" id="terminal-input" placeholder="Enter command...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Output Panel -->
+                    <div class="tab-panel" id="output-panel">
+                        <div class="output-container">
+                            <div class="output-content" id="output-content">
+                                <div class="empty-state">
+                                    <div class="empty-icon">📄</div>
+                                    <div class="empty-text">No output to display</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Debug Console -->
+                    <div class="tab-panel" id="debug-panel">
+                        <div class="debug-container">
+                            <div class="debug-content" id="debug-content">
+                                <div class="empty-state">
+                                    <div class="empty-icon">🐛</div>
+                                    <div class="empty-text">Debug console ready</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Logs Panel -->
+                    <div class="tab-panel" id="ai-logs-panel">
+                        <div class="ai-logs-container">
+                            <div class="ai-logs-content" id="ai-logs-content">
+                                <div class="log-entry system">
+                                    <span class="log-timestamp">[12:00:00]</span>
+                                    <span class="log-level">INFO</span>
+                                    <span class="log-message">AI systems initialized successfully</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Resize Handle -->
+                <div class="resize-handle horizontal" id="bottom-resize-handle"></div>
+            </div>
+
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <div class="status-left">
+                    <div class="status-item" id="current-branch">
+                        <span class="icon">🌿</span>
+                        <span class="text">main</span>
+                    </div>
+                    <div class="status-item" id="sync-status">
+                        <span class="icon">🔄</span>
+                        <span class="text">Synced</span>
+                    </div>
+                </div>
+                
+                <div class="status-center">
+                    <div class="status-item" id="cursor-position">
+                        <span class="text">Ln 1, Col 1</span>
+                    </div>
+                </div>
+                
+                <div class="status-right">
+                    <div class="status-item" id="language-mode">
+                        <span class="text">Plain Text</span>
+                    </div>
+                    <div class="status-item" id="encoding">
+                        <span class="text">UTF-8</span>
+                    </div>
+                    <div class="status-item" id="ai-model-status">
+                        <span class="icon">🤖</span>
+                        <span class="text">Local Model</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals and Overlays -->
+        <div class="modal-overlay" id="modal-overlay" style="display: none;">
+            <!-- Settings Modal -->
+            <div class="modal settings-modal" id="settings-modal">
+                <div class="modal-header">
+                    <h2>Settings</h2>
+                    <button class="close-button" id="close-settings">✕</button>
+                </div>
+                <div class="modal-content">
+                    <!-- Settings content will be dynamically loaded -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../node_modules/monaco-editor/min/vs/loader.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/editor.js"></script>
+    <script src="js/file-explorer.js"></script>
+    <script src="js/ai-chat.js"></script>
+    <script src="js/terminal.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
