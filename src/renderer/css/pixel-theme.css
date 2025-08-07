@@ -1,0 +1,447 @@
+/* Quonx IDE - Pixel Art Theme */
+
+:root {
+  /* Pixel Art Color Palette */
+  --pixel-bg-primary: #1a1a2e;
+  --pixel-bg-secondary: #16213e;
+  --pixel-bg-tertiary: #0f3460;
+  --pixel-accent-primary: #e94560;
+  --pixel-accent-secondary: #f39c12;
+  --pixel-accent-tertiary: #2ecc71;
+  --pixel-text-primary: #f8f8f2;
+  --pixel-text-secondary: #bdc3c7;
+  --pixel-text-muted: #7f8c8d;
+  --pixel-border: #34495e;
+  --pixel-hover: #3498db;
+  --pixel-success: #27ae60;
+  --pixel-warning: #f39c12;
+  --pixel-error: #e74c3c;
+  --pixel-info: #3498db;
+  
+  /* Pixel Dimensions */
+  --pixel-unit: 4px;
+  --pixel-border-width: 2px;
+  --pixel-radius: 0px; /* No rounded corners for pixel art */
+  --pixel-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
+  --pixel-shadow-inset: inset 1px 1px 0px rgba(255, 255, 255, 0.1);
+  
+  /* Typography */
+  --pixel-font-family: 'Press Start 2P', monospace;
+  --pixel-font-size-xs: 8px;
+  --pixel-font-size-sm: 10px;
+  --pixel-font-size-md: 12px;
+  --pixel-font-size-lg: 14px;
+  --pixel-font-size-xl: 16px;
+  --pixel-font-size-xxl: 20px;
+  
+  /* Spacing */
+  --pixel-spacing-xs: calc(var(--pixel-unit) * 1);
+  --pixel-spacing-sm: calc(var(--pixel-unit) * 2);
+  --pixel-spacing-md: calc(var(--pixel-unit) * 3);
+  --pixel-spacing-lg: calc(var(--pixel-unit) * 4);
+  --pixel-spacing-xl: calc(var(--pixel-unit) * 6);
+  --pixel-spacing-xxl: calc(var(--pixel-unit) * 8);
+}
+
+/* Base Styles */
+* {
+  box-sizing: border-box;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--pixel-font-family);
+  font-size: var(--pixel-font-size-sm);
+  background: var(--pixel-bg-primary);
+  color: var(--pixel-text-primary);
+  overflow: hidden;
+  line-height: 1.4;
+}
+
+/* Pixel Buttons */
+.pixel-button {
+  background: var(--pixel-bg-tertiary);
+  border: var(--pixel-border-width) solid var(--pixel-border);
+  color: var(--pixel-text-primary);
+  padding: var(--pixel-spacing-sm) var(--pixel-spacing-md);
+  font-family: var(--pixel-font-family);
+  font-size: var(--pixel-font-size-xs);
+  cursor: pointer;
+  transition: none;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+}
+
+.pixel-button:hover {
+  background: var(--pixel-hover);
+  border-color: var(--pixel-hover);
+  box-shadow: var(--pixel-shadow);
+}
+
+.pixel-button:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
+}
+
+.pixel-button:disabled {
+  background: var(--pixel-text-muted);
+  border-color: var(--pixel-text-muted);
+  color: var(--pixel-bg-primary);
+  cursor: not-allowed;
+}
+
+/* Icon Buttons */
+.icon-button {
+  background: transparent;
+  border: var(--pixel-border-width) solid transparent;
+  color: var(--pixel-text-secondary);
+  padding: var(--pixel-spacing-xs);
+  font-size: var(--pixel-font-size-md);
+  cursor: pointer;
+  transition: none;
+  min-width: 24px;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-button:hover {
+  background: var(--pixel-bg-tertiary);
+  border-color: var(--pixel-border);
+  color: var(--pixel-text-primary);
+  box-shadow: var(--pixel-shadow);
+}
+
+/* Pixel Inputs */
+.pixel-input {
+  background: var(--pixel-bg-primary);
+  border: var(--pixel-border-width) solid var(--pixel-border);
+  color: var(--pixel-text-primary);
+  padding: var(--pixel-spacing-sm);
+  font-family: var(--pixel-font-family);
+  font-size: var(--pixel-font-size-xs);
+  outline: none;
+  width: 100%;
+}
+
+.pixel-input:focus {
+  border-color: var(--pixel-accent-primary);
+  box-shadow: var(--pixel-shadow-inset);
+}
+
+.pixel-input::placeholder {
+  color: var(--pixel-text-muted);
+  opacity: 1;
+}
+
+/* Pixel Select */
+.pixel-select {
+  background: var(--pixel-bg-primary);
+  border: var(--pixel-border-width) solid var(--pixel-border);
+  color: var(--pixel-text-primary);
+  padding: var(--pixel-spacing-sm);
+  font-family: var(--pixel-font-family);
+  font-size: var(--pixel-font-size-xs);
+  cursor: pointer;
+  outline: none;
+}
+
+.pixel-select:focus {
+  border-color: var(--pixel-accent-primary);
+}
+
+/* Pixel Checkbox */
+.pixel-checkbox {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: var(--pixel-font-size-xs);
+  margin: var(--pixel-spacing-sm) 0;
+}
+
+.pixel-checkbox input {
+  display: none;
+}
+
+.pixel-checkbox .checkmark {
+  width: 16px;
+  height: 16px;
+  background: var(--pixel-bg-primary);
+  border: var(--pixel-border-width) solid var(--pixel-border);
+  margin-right: var(--pixel-spacing-sm);
+  position: relative;
+  display: inline-block;
+}
+
+.pixel-checkbox input:checked + .checkmark {
+  background: var(--pixel-accent-primary);
+  border-color: var(--pixel-accent-primary);
+}
+
+.pixel-checkbox input:checked + .checkmark::after {
+  content: '✓';
+  position: absolute;
+  left: 2px;
+  top: -2px;
+  color: var(--pixel-text-primary);
+  font-size: 10px;
+  font-weight: bold;
+}
+
+/* Tab System */
+.tab-button {
+  background: var(--pixel-bg-secondary);
+  border: var(--pixel-border-width) solid var(--pixel-border);
+  border-bottom: none;
+  color: var(--pixel-text-secondary);
+  padding: var(--pixel-spacing-sm) var(--pixel-spacing-md);
+  font-family: var(--pixel-font-family);
+  font-size: var(--pixel-font-size-xs);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--pixel-spacing-sm);
+  transition: none;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.tab-button.active {
+  background: var(--pixel-bg-primary);
+  color: var(--pixel-text-primary);
+  border-bottom-color: var(--pixel-bg-primary);
+  position: relative;
+  z-index: 1;
+}
+
+.tab-button:hover:not(.active) {
+  background: var(--pixel-bg-tertiary);
+  color: var(--pixel-text-primary);
+}
+
+.tab-button .icon {
+  font-size: var(--pixel-font-size-md);
+}
+
+.tab-button .label {
+  font-size: var(--pixel-font-size-xs);
+}
+
+/* Tab Panels */
+.tab-panel {
+  display: none;
+  height: 100%;
+  overflow: hidden;
+}
+
+.tab-panel.active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Loading Screen */
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--pixel-bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loading-content {
+  text-align: center;
+  animation: pixelPulse 2s ease-in-out infinite;
+}
+
+.pixel-logo {
+  margin-bottom: var(--pixel-spacing-xl);
+}
+
+.logo-text {
+  font-size: var(--pixel-font-size-xxl);
+  color: var(--pixel-accent-primary);
+  text-shadow: var(--pixel-shadow);
+  margin-bottom: var(--pixel-spacing-sm);
+  letter-spacing: 4px;
+}
+
+.logo-subtitle {
+  font-size: var(--pixel-font-size-xs);
+  color: var(--pixel-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.loading-bar {
+  width: 200px;
+  height: 16px;
+  background: var(--pixel-bg-secondary);
+  border: var(--pixel-border-width) solid var(--pixel-border);
+  margin: var(--pixel-spacing-lg) auto;
+  position: relative;
+  overflow: hidden;
+}
+
+.loading-progress {
+  height: 100%;
+  background: var(--pixel-accent-primary);
+  width: 0%;
+  animation: loadingProgress 3s ease-in-out infinite;
+}
+
+.loading-text {
+  font-size: var(--pixel-font-size-xs);
+  color: var(--pixel-text-muted);
+  margin-top: var(--pixel-spacing-md);
+  animation: pixelBlink 1.5s ease-in-out infinite;
+}
+
+/* Animations */
+@keyframes pixelPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes loadingProgress {
+  0% { width: 0%; }
+  50% { width: 75%; }
+  100% { width: 100%; }
+}
+
+@keyframes pixelBlink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.3; }
+}
+
+@keyframes pixelGlow {
+  0%, 100% { 
+    box-shadow: 0 0 5px var(--pixel-accent-primary);
+  }
+  50% { 
+    box-shadow: 0 0 20px var(--pixel-accent-primary), 0 0 30px var(--pixel-accent-primary);
+  }
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--pixel-bg-secondary);
+  border: 1px solid var(--pixel-border);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--pixel-bg-tertiary);
+  border: 1px solid var(--pixel-border);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--pixel-hover);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--pixel-bg-secondary);
+}
+
+/* Status Indicators */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--pixel-text-muted);
+  display: inline-block;
+  margin-right: var(--pixel-spacing-xs);
+  animation: pixelBlink 2s ease-in-out infinite;
+}
+
+.status-dot.active {
+  background: var(--pixel-success);
+  animation: pixelGlow 2s ease-in-out infinite;
+}
+
+.status-dot.warning {
+  background: var(--pixel-warning);
+}
+
+.status-dot.error {
+  background: var(--pixel-error);
+}
+
+/* Empty States */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pixel-spacing-xxl);
+  text-align: center;
+  color: var(--pixel-text-muted);
+  height: 100%;
+}
+
+.empty-icon {
+  font-size: var(--pixel-font-size-xxl);
+  margin-bottom: var(--pixel-spacing-md);
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: var(--pixel-font-size-xs);
+  margin-bottom: var(--pixel-spacing-lg);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Pixel Art Borders */
+.pixel-border-inset {
+  border: var(--pixel-border-width) solid var(--pixel-border);
+  box-shadow: var(--pixel-shadow-inset);
+}
+
+.pixel-border-outset {
+  border: var(--pixel-border-width) solid var(--pixel-border);
+  box-shadow: var(--pixel-shadow);
+}
+
+/* Utility Classes */
+.pixel-glow {
+  animation: pixelGlow 2s ease-in-out infinite;
+}
+
+.pixel-pulse {
+  animation: pixelPulse 1s ease-in-out infinite;
+}
+
+.pixel-blink {
+  animation: pixelBlink 1s ease-in-out infinite;
+}
+
+/* Responsive Pixel Scaling */
+@media (max-width: 1200px) {
+  :root {
+    --pixel-font-size-xs: 7px;
+    --pixel-font-size-sm: 9px;
+    --pixel-font-size-md: 11px;
+  }
+}
+
+@media (min-width: 1600px) {
+  :root {
+    --pixel-font-size-xs: 9px;
+    --pixel-font-size-sm: 11px;
+    --pixel-font-size-md: 13px;
+  }
+}
